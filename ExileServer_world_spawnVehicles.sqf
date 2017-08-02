@@ -9,7 +9,7 @@
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/.
  */
 
-private["_mapsizeX","_mapsizeY","_gridSize","_gridVehicles","_gridSizeOffset","_vehicleCount","_debugMarkers","_vehicleClassNames","_maximumDamage","_damageChance","_xSize","_workingXSize","_ySize","_workingYSize","_position","_spawned","_spawnedPositions","_positionReal","_spawnControl","_vehicleClassName","_vehicle","_hitpoints","_debugMarker","_vehicleItemsAllowed","_allowedItems","_maximumItemsPerVehicle","_itemsAdded","_itemsPerVehicle","_itemAdd","_cargoType"];
+private["_mapsizeX","_mapsizeY","_gridSize","_gridVehicles","_gridSizeOffset","_vehicleCount","_debugMarkers","_vehicleClassNames","_maximumDamage","_damageChance","_xSize","_workingXSize","_ySize","_workingYSize","_position","_spawned","_spawnedPositions","_positionReal","_spawnControl","_vehicleClassName","_vehicle","_hitpoints","_debugMarker","_vehicleItemsAllowed","_allowedItems","_maximumItemsPerVehicle","_itemsAdded","_itemsPerVehicle","_itemAdd","_cargoType","_magazineCount", "_magazineClass", "_weaponExists", "_magazines", "_maximumMagPerWeapon"];
 _mapsizeX = worldSize;
 _mapsizeY = worldSize;
 _gridSize = getNumber(configFile >> "CfgSettings" >> "VehicleSpawn" >> "vehiclesGridSize");
@@ -25,6 +25,7 @@ _vehicleItemsAllowed = getNumber (missionConfigFile >> "SpawnVehicleItems" >> "W
 _allowedItems = getArray (missionConfigFile >> "SpawnVehicleItems" >> "WorldVehicles" >> "allowedItems");
 _maximumItemsPerVehicle = getNumber (missionConfigFile >> "SpawnVehicleItems" >> "WorldVehicles" >> "maximumItemsPerVehicle");
 _maximumItemsPerVehicle = _maximumItemsPerVehicle +1;
+_maximumMagPerWeapon = getNumber (missionConfigFile >> "SpawnVehicleItems" >> "WorldVehicles" >> "maximumMagPerWeapon");
 for "_xSize" from 0 to _mapsizeX step _gridSize do
 {
 	_workingXSize = _xSize + _gridSizeOffset;
@@ -63,9 +64,25 @@ for "_xSize" from 0 to _mapsizeX step _gridSize do
         while{_itemsAdded < _itemsPerVehicle} do {
           _itemAdd = _allowedItems select (floor (random (count _allowedItems)));
           _cargoType = _itemAdd call ExileClient_util_cargo_getType;
+          _magazineClass = "";
           switch (_cargoType) do {
             case 1: { _vehicle addMagazineAmmoCargo [_itemAdd, 1, 1]; };
-            case 2: { _vehicle addWeaponCargoGlobal [_itemAdd, 1]; };
+            case 2: {   
+              _weaponExists = isClass (configFile / "CfgWeapons" / _itemAdd);
+              _magazines = getArray (configFile / "CfgWeapons" / _itemAdd / "magazines");
+              _magazineCount = floor (random _maximumMagPerWeapon);
+              if (count _magazines > 0 && _weaponExists) then {
+                _magazineClass = _magazines select (0);
+              }	else {
+                _magazineClass = "";
+              };
+
+              if (isClass (configFile / "CfgMagazines" / _magazineClass)) then {
+                  _vehicle addMagazineAmmoCargo  [_magazineClass, _magazineCount, 300]; 
+              };
+
+              _vehicle addWeaponCargoGlobal [_itemAdd, 1]; 
+                    };
             case 3: { _vehicle addBackpackCargoGlobal [_itemAdd, 1]; };
             default { _vehicle addItemCargoGlobal [_itemAdd, 1, 1]; };
           };
