@@ -29,6 +29,7 @@ class SpawnVehicleItems{
 		* kinda self explanitory
 		*/
 		maximumItemsPerVehicle = 5;
+                maximumMagPerWeapon = 5; 		
 		/*
 		* Array of allowedItems
 		* kinda self explanitory
